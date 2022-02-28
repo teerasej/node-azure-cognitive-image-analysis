@@ -16,12 +16,14 @@ const computerVisionClient = new ComputerVisionClient(
 
     let imageURL = 'https://www.thesprucepets.com/thmb/beAAL4NaD8_zLL0BM13Tv6IbqV0=/1500x1000/filters:fill(auto,1)/kitten-56a09ff83df78cafdaa36304.jpg';
 
-    console.log('Analyzing URL image to describe...', imageURL.split('/').pop());
+    const fileName = imageURL.split('/').pop();
+
+    console.log('Analyzing URL image to describe...', fileName);
     const caption = (await computerVisionClient.describeImage(imageURL)).captions[0];
     console.log(`This may be ${caption.text} (${caption.confidence.toFixed(2)} confidence)`);
 
-    console.log('Analyzing objects in image...', imageURL.split('/').pop());
-    const objects = (await computerVisionClient.analyzeImage(imageURL, {visualFeatures: ['Objects']})).objects;
+    console.log('Analyzing objects in image...', fileName);
+    const objects = (await computerVisionClient.analyzeImage(imageURL, { visualFeatures: ['Objects'] })).objects;
 
     if(objects.length > 0) {
         console.log(`   Found ${objects.length} objects.`);
