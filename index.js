@@ -32,10 +32,14 @@ const computerVisionClient = new ComputerVisionClient(
             console.log(`   ${object.object} (${object.confidence.toFixed(2)} confidence)`)
             // download image
             
-            const file = fs.createWriteStream(fileName);
+            const downloadingFile = fs.createWriteStream(fileName);
             const request = http.get(imageURL, response => {
-                response.pipe(file);
-            });
+                downloadingFile.on('finish', () => { downloadingFile.close() })
+                response.pipe(downloadingFile);
+                
+            }) .on('error', (error) => {
+                fs.unlink(fileName);
+            })
 
         });
     } else {
