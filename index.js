@@ -20,5 +20,17 @@ const computerVisionClient = new ComputerVisionClient(
     const caption = (await computerVisionClient.describeImage(imageURL)).captions[0];
     console.log(`This may be ${caption.text} (${caption.confidence.toFixed(2)} confidence)`);
 
+    console.log('Analyzing objects in image...', imageURL.split('/').pop());
+    const objects = (await computerVisionClient.analyzeImage(imageURL, {visualFeatures: ['Objects']})).objects;
+
+    if(objects.length > 0) {
+        console.log(`   Found ${objects.length} objects.`);
+        objects.forEach(object => {
+            console.log(`   ${object.object} (${object.confidence.toFixed(2)} confidence)`)
+        });
+    } else {
+        console.log('No object found.');
+    }
+
     console.log('-----');
 })()
