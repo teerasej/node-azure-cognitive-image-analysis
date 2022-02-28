@@ -3,6 +3,7 @@ require('dotenv').config();
 const key = process.env.key;
 const endpoint = process.env.endpoint;
 
+const http = require('https');
 const fs = require('fs');
 const ComputerVisionClient = require('@azure/cognitiveservices-computervision').ComputerVisionClient;
 const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
@@ -29,6 +30,13 @@ const computerVisionClient = new ComputerVisionClient(
         console.log(`   Found ${objects.length} objects.`);
         objects.forEach(object => {
             console.log(`   ${object.object} (${object.confidence.toFixed(2)} confidence)`)
+            // download image
+            
+            const file = fs.createWriteStream(fileName);
+            const request = http.get(imageURL, response => {
+                response.pipe(file);
+            });
+
         });
     } else {
         console.log('No object found.');
