@@ -5,9 +5,52 @@ const endpoint = process.env.endpoint;
 
 const http = require('https');
 const fs = require('fs');
+var gm = require('gm');
 const ComputerVisionClient = require('@azure/cognitiveservices-computervision').ComputerVisionClient;
 const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
 
+async function getImage(imageURL, fileName) {
+
+    const downloadingFile = fs.createWriteStream(fileName);
+
+    return new Promise((resolve, reject) => {
+        http.get(imageURL, response => {
+            downloadingFile.on('finish', () => {
+                downloadingFile.close();
+                resolve();
+            })
+            response.pipe(downloadingFile);
+
+        }).on('error', (error) => {
+            fs.unlink(fileName);
+            reject(error);
+        })
+    })
+}
+
+async function drawRect(object, fileName, resultFileName) {
+    let readableImageFileStream = fs.createReadStream(fileName);
+
+    return new Promise((resolve, reject) => {
+        gm(readableImageFileStream)
+        .stroke('green', 3)
+        .fill("rgba( 255, 255, 255 , 0 )")
+        .drawRectangle(
+            object.rectangle.x,
+            object.rectangle.y,
+            object.rectangle.x + object.rectangle.w,
+            object.rectangle.y + object.rectangle.h
+        ).write(resultFileName, (error) => {
+            if (!error) {
+                console.log('    draw rectanble done.');
+                resolve();
+            } else {
+                console.error(error);
+                reject(error);
+            };
+        })
+    });
+}
 
 
 const computerVisionClient = new ComputerVisionClient(
@@ -15,7 +58,7 @@ const computerVisionClient = new ComputerVisionClient(
 
 (async () => {
 
-    let imageURL = 'https://www.thesprucepets.com/thmb/beAAL4NaD8_zLL0BM13Tv6IbqV0=/1500x1000/filters:fill(auto,1)/kitten-56a09ff83df78cafdaa36304.jpg';
+    let imageURL = 'https://cdn.pixabay.com/photo/2018/07/13/10/20/kittens-3535404_1280.jpg';
 
     const fileName = imageURL.split('/').pop();
 
@@ -28,23 +71,28 @@ const computerVisionClient = new ComputerVisionClient(
 
     if(objects.length > 0) {
         console.log(`   Found ${objects.length} objects.`);
-        objects.forEach(object => {
-            console.log(`   ${object.object} (${object.confidence.toFixed(2)} confidence)`)
-            // download image
-            
-            const downloadingFile = fs.createWriteStream(fileName);
-            const request = http.get(imageURL, response => {
-                downloadingFile.on('finish', () => { downloadingFile.close() })
-                response.pipe(downloadingFile);
-                
-            }) .on('error', (error) => {
-                fs.unlink(fileName);
-            })
 
-        });
+        // download image
+        await getImage(imageURL, fileName);
+
+        for (let index = 0; index < objects.length; index++) {
+            const object = objects[index];
+            console.log(`   ${object.object} (${object.confidence.toFixed(2)} confidence)`)
+
+        
+            // draw rect 
+            if( index == 0 ) {
+                await drawRect(object, fileName, 'result.png');
+            } else {
+                await drawRect(object, 'result.png', 'result.png');
+            }
+            
+        }
+       
     } else {
         console.log('No object found.');
     }
+
 
     console.log('-----');
 })()
