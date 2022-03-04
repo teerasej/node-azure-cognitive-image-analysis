@@ -58,7 +58,7 @@ const computerVisionClient = new ComputerVisionClient(
 
 (async () => {
 
-    let imageURL = 'https://cdn.pixabay.com/photo/2018/07/13/10/20/kittens-3535404_1280.jpg';
+    let imageURL = 'https://github.com/teerasej/node-azure-cognitive-image-analysis/blob/master/images/matcha-hoji.JPG';
 
     const fileName = imageURL.split('/').pop();
 
